@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 
+#include <sys/wait.h>
 #include <unistd.h>
 
 const std::string BASHSYMBOL = "> ";
@@ -22,6 +23,7 @@ int main()
     *currentDir = getcwd();
     std::vector<std::string> *tokens = new std::vector<std::string>();
 
+    system("clear");
     do
     {
         std::cout << BASHSYMBOL;
@@ -33,9 +35,23 @@ int main()
             std::cout << *currentDir << "\n";
         else if (*command == "pipetest")
         {
-                }
+            int childPID = fork();
+            if (childPID == 0)
+            {
+                char *args[2];
+                args[0] = (char *)std::string("ls").c_str();
+                args[0] = (char *)std::string("&").c_str();
+                execvp(args[0], args);
+                //execlp("clear", "clear", NULL);
+                //execlp("/bin/ls", "ls", NULL);
+                return 0;
+            }
+        }
         else
             std::cout << "Unrecognized command \n";
+
+        wait(NULL);
+        wait(NULL);
     } while (exit == false);
     std::exit(0);
 }
