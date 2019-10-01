@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 
+#include <string.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -35,17 +36,18 @@ int main()
             std::cout << *currentDir << "\n";
         else if (*command == "pipetest")
         {
-            int childPID = fork();
+            pid_t childPID = fork();
             if (childPID == 0)
             {
                 char *args[2];
-                args[0] = (char *)std::string("ls").c_str();
-                args[0] = (char *)std::string("&").c_str();
+                args[0] = strdup("ls");
+                args[1] = NULL;
                 execvp(args[0], args);
                 //execlp("clear", "clear", NULL);
                 //execlp("/bin/ls", "ls", NULL);
                 return 0;
             }
+            waitpid(childPID, NULL, 0);
         }
         else
             std::cout << "Unrecognized command \n";
