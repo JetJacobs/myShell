@@ -1,8 +1,10 @@
 #include "cmdParser.hpp"
+#include "executor.hpp"
 
 int main()
 {
-    std::string testString = "This is | demo Input; duh";
+    std::string testString = "ls";
     std::vector<std::string> *commands = tokenizeInput(testString);
+    exeForground(*commands);
     return 0;
 }

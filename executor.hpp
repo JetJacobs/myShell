@@ -1,6 +1,8 @@
-#include <vector>
 #include <string>
+#include <vector>
 
+#include <string.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 #ifndef EXECUTOR_HPP
@@ -16,11 +18,18 @@ public:
     Process(std::vector<std::string> command);
     pid_t getPID();
     void setPID(pid_t passedPID);
-    void setInput(std::string inputFile);
-    void setOutput(std::string outputFile);
 };
 
-void exeForground(Process passedProcess);
-void exeBackground(Process passedProcess);
+class Executor
+{
+private:
+    std::vector<Process> processes;
+
+public:
+    Executor();
+
+    void exeForground(std::vector<std::string> command);
+    void exeBackground(std::vector<std::string> command);
+};
 
 #endif

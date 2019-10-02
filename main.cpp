@@ -6,6 +6,9 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "cmdParser.hpp"
+#include "executor.hpp"
+
 const std::string BASHSYMBOL = "> ";
 const int PATH_MAX = 256;
 
@@ -17,44 +20,33 @@ std::vector<int[2]> pipes;
 
 std::string getcwd();
 
-int main()
+int main(int argc, char **argv)
 {
     bool exit = new bool;
     exit = false;
     *currentDir = getcwd();
     std::vector<std::string> *tokens = new std::vector<std::string>();
 
+    Executor *executor = new Executor();
+
     system("clear");
-    do
+    if (argc == 1)
     {
-        std::cout << BASHSYMBOL;
-        std::cin >> *command;
-
-        if (*command == "quit")
-            exit = true;
-        else if (*command == "cwd")
-            std::cout << *currentDir << "\n";
-        else if (*command == "pipetest")
+        do
         {
-            pid_t childPID = fork();
-            if (childPID == 0)
-            {
-                char *args[2];
-                args[0] = strdup("ls");
-                args[1] = NULL;
-                execvp(args[0], args);
-                //execlp("clear", "clear", NULL);
-                //execlp("/bin/ls", "ls", NULL);
-                return 0;
-            }
-            waitpid(childPID, NULL, 0);
-        }
-        else
-            std::cout << "Unrecognized command \n";
+            std::cout << BASHSYMBOL;
+            std::cin >> *command;
 
-        wait(NULL);
-        wait(NULL);
-    } while (exit == false);
+            if (*command == "quit")
+                exit = true;
+            else
+            {
+                tokens = tokenizeInput(*command);
+                executor->exeForground(*tokens);
+            }
+        } while (exit == false);
+    }
+    system("clear");
     std::exit(0);
 }
 
