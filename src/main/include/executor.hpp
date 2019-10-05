@@ -24,12 +24,15 @@ class Executor
 {
 private:
     std::vector<Process> processes;
+    std::vector<int[2]> pipes;
 
 public:
     Executor();
 
-    void exeForground(std::vector<std::string> command);
+    int exeForground(std::vector<std::string> command);
     void exeBackground(std::vector<std::string> command);
+    void execute(std::vector<std::string> command);
+    void handlePipes();
 };
 
 #endif

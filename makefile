@@ -1,8 +1,9 @@
-default: main.cpp executor.cpp executor.hpp cmdParser.cpp cmdParser.hpp
-	g++ -o myshell.o main.cpp executor.cpp executor.hpp cmdParser.cpp cmdParser.hpp
+default: src/main/main.cpp src/main/executor.cpp src/main/include/executor.hpp src/main/cmdParser.cpp src/main/include/cmdParser.hpp
+	g++ -o myshell.o src/main/main.cpp src/main/executor.cpp src/main/include/executor.hpp src/main/cmdParser.cpp src/main/include/cmdParser.hpp
 
-test: executor.cpp executor.hpp cmdParser.cpp cmdParser.hpp
-	g++ -o test.o test.cpp cmdParser.cpp cmdParser.hpp executor.cpp executor.hpp
+test: src/test/test.cpp src/main/executor.cpp src/main/include/executor.hpp src/main/cmdParser.cpp src/main/include/cmdParser.hpp
+	g++ -o test.o src/test/test.cpp src/main/executor.cpp src/main/include/executor.hpp src/main/cmdParser.cpp src/main/include/cmdParser.hpp
+	./test.o
 
 clean:
 	rm -rvf *.o

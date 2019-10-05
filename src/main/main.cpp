@@ -6,26 +6,21 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include "cmdParser.hpp"
-#include "executor.hpp"
+#include "include/cmdParser.hpp"
+#include "include/executor.hpp"
 
 const std::string BASHSYMBOL = "> ";
 const int PATH_MAX = 256;
 
-std::string *currentDir = new std::string();
-std::string *command = new std::string();
-
+std::string *input = new std::string();
 std::vector<std::string> *tokens;
 std::vector<int[2]> pipes;
-
-std::string getcwd();
 
 int main(int argc, char **argv)
 {
     bool exit = new bool;
     exit = false;
-    *currentDir = getcwd();
-    std::vector<std::string> *tokens = new std::vector<std::string>();
+    tokens = new std::vector<std::string>();
 
     Executor *executor = new Executor();
 
@@ -35,14 +30,18 @@ int main(int argc, char **argv)
         do
         {
             std::cout << BASHSYMBOL;
-            std::cin >> *command;
+            getline(std::cin, *input);
 
-            if (*command == "quit")
+            if (*input == "quit")
                 exit = true;
             else
             {
-                tokens = tokenizeInput(*command);
-                executor->exeForground(*tokens);
+                tokens = tokenizeInputToCommands(*input);
+                for (int i = 0; i < tokens->size(); i++)
+                {
+                    std::vector<std::string> *command = parseCommands((*tokens)[i]);
+                    executor->exeForground(*command);
+                }
             }
         } while (exit == false);
     }
@@ -50,6 +49,8 @@ int main(int argc, char **argv)
     std::exit(0);
 }
 
+/*std::string *currentDir = new std::string();
+std::string getcwd();
 std::string getcwd()
 {
     char buffer[PATH_MAX];
@@ -57,4 +58,4 @@ std::string getcwd()
         return std::string(buffer);
     else
         return "Current working directory not found\n";
-}
+}*/
