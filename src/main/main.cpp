@@ -14,7 +14,6 @@ const int PATH_MAX = 256;
 
 std::string *input = new std::string();
 std::vector<std::string> *tokens;
-std::vector<int[2]> pipes;
 
 int main(int argc, char **argv)
 {
@@ -32,6 +31,10 @@ int main(int argc, char **argv)
             std::cout << BASHSYMBOL;
             getline(std::cin, *input);
 
+            /* TODO move custom commands to the executor
+             * 
+             * 
+            */
             if (*input == "quit")
                 exit = true;
             else
@@ -39,23 +42,15 @@ int main(int argc, char **argv)
                 tokens = tokenizeInputToCommands(*input);
                 for (int i = 0; i < tokens->size(); i++)
                 {
-                    std::vector<std::string> *command = parseCommands((*tokens)[i]);
-                    executor->exeForground(*command);
+                    executor->handleExec((*tokens)[i]);
                 }
             }
         } while (exit == false);
     }
+    else
+    {
+        std::cout << "Run bash file.";
+    }
     system("clear");
     std::exit(0);
 }
-
-/*std::string *currentDir = new std::string();
-std::string getcwd();
-std::string getcwd()
-{
-    char buffer[PATH_MAX];
-    if (getcwd(buffer, PATH_MAX) != 0)
-        return std::string(buffer);
-    else
-        return "Current working directory not found\n";
-}*/
