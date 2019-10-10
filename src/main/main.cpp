@@ -9,7 +9,7 @@
 #include "include/cmdParser.hpp"
 #include "include/executor.hpp"
 
-const std::string BASHSYMBOL = "> ";
+const std::string BASHSYMBOL = "/myshell$ ";
 const int PATH_MAX = 256;
 
 std::string *input = new std::string();

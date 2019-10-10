@@ -7,11 +7,11 @@ const std::string divider = "--------------------------------------";
 int main()
 {
     std::string testString = "ls -l";
-    std::string testString1 = "cat makefile | less";
+    //std::string testString1 = "cat src/main/executor.cpp | more ";
+    std::string testString1 = "ls -l";
     std::string testString2 = "ls -l ; ls";
+    std::string multiPipe = "ls | head -4 | head -1";
     Executor executor = Executor();
-
-    //std::vector<std::string> *commands = parseCommands(testString);
 
     /* 
      * This is the start of parsing tests nothing too fancy.
@@ -46,6 +46,16 @@ int main()
     std::cout << "Parsing by semicolon with semicolon\n";
     parserOutput = *tokenizeInputToCommands(testString2);
     std::cout << "\tExpect: 2\tActual: " << parserOutput.size() << "\n";
+
+    parserOutput = *tokenizePipeCommands(testString1);
+    std::cout << parserOutput[0] << "\n";
+    std::cout << divider << "\n";
+    executor.handlePipes(parserOutput);
+
+    parserOutput = *tokenizePipeCommands(multiPipe);
+    std::cout << parserOutput[0] << "|" << parserOutput[1] << "|" << parserOutput[2] << "\n";
+    std::cout << divider << "\n";
+    executor.handlePipes(parserOutput);
 
     return 0;
 }

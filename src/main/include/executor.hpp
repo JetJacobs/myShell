@@ -15,19 +15,9 @@
 #ifndef EXECUTOR_HPP
 #define EXECUTOR_HPP
 
-/* 
- * This is just a simple data structure to store process specific info.
-*/
-class Process
+struct pipeStruct
 {
-private:
-    pid_t pid;
-    std::vector<std::string> command;
-
-public:
-    Process(std::vector<std::string> command);
-    pid_t getPID();
-    void setPID(pid_t passedPID);
+    int ends[2];
 };
 
 /* 
@@ -36,13 +26,10 @@ public:
 class Executor
 {
 private:
-    int pipeOne[2];
-    int pipeTwo[2];
-
-    std::vector<Process> processes;
-    std::vector<int[2]> pipes;
+    std::vector<pipeStruct> pipes;
     std::vector<std::string> customCommands;
     void execute(std::vector<std::string> command);
+    void startProcess(int readEnd, int writeEnd);
 
 public:
     Executor();
