@@ -1,8 +1,10 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 
 #include <string.h>
+#include <cstdio>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -14,53 +16,71 @@ const int PATH_MAX = 256;
 
 std::string *input = new std::string();
 std::vector<std::string> *tokens;
+std::string launchDir;
+
+void execLogic(Executor *executor);
 
 int main(int argc, char **argv)
 {
-    bool exit = new bool;
-    exit = false;
+    bool exit = false;
     tokens = new std::vector<std::string>();
-
     Executor *executor = new Executor();
+
+    char buff[PATH_MAX];
+    getcwd(buff, PATH_MAX);
+    std::string launchDir = buff;
 
     system("clear");
     if (argc == 1)
     {
         do
         {
-            std::cout << "\n"
-                      << BASHSYMBOL;
+            std::cout << launchDir << BASHSYMBOL;
             getline(std::cin, *input);
-
-            // TODO move custom commands to the executor
-
-            if (*input == "quit")
-                exit = true;
-            else if (*input == "pause")
-            {
-                getline(std::cin, *input);
-            }
-            else if (input->rfind("cd ", 0) == 0)
-            {
-                char *dir = (char *)input->substr(3).c_str();
-                if (chdir(dir) == -1)
-                    std::cout << "Error Finding the directory.";
-            }
-            else
-            {
-                tokens = tokenizeInputToCommands(*input);
-                for (int i = 0; i < tokens->size(); i++)
-                {
-                    executor->handleExec((*tokens)[i]);
-                    std::cout << "\n";
-                }
-            }
+            execLogic(executor);
         } while (exit == false);
+        system("clear");
+        std::exit(0);
     }
     else
     {
-        std::cout << "Run bash file.";
+        std::ifstream batchFile(argv[1]);
+        std::cout << "Running bash file.\n";
+        while (getline(batchFile, *input))
+        {
+            execLogic(executor);
+        }
+        std::exit(0);
     }
-    system("clear");
-    std::exit(0);
+}
+
+/*
+ * This is the logic for processing and executing the any given input
+ * I noticed that both processes are basically the same and abstracted
+ * it out.
+ */
+void execLogic(Executor *executor)
+{
+    if (*input == "quit")
+        std::exit(0);
+    else if (*input == "pause")
+    {
+        std::cout << "Press enter to continue...";
+        getline(std::cin, *input);
+    }
+    else if (input->rfind("cd ", 0) == 0) //If the command starts with "cd "
+    {
+        char *dir = (char *)input->substr(3).c_str(); //Get everything after "cd "
+        if (chdir(dir) == -1)
+            std::cout << "Error Finding the directory.";
+    }
+    else
+    {
+        tokens = tokenizeInputToCommands(*input); //Parse for semicolons
+        for (int i = 0; i < tokens->size(); i++)
+        {
+            executor->handleExec((*tokens)[i]);
+            std::cout << "\n";
+        }
+    }
 }

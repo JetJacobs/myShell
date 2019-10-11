@@ -1,7 +1,7 @@
 /* Author Jet Jacobs
  * Date:  10/5/19
  * This file holds all the declarations for the processing methods required for
- * managing commands passed to it. This may include parsing, pipeing, and forking
+ * managing commands passed to it. This includes pipeing, and forking
  * to proccess commands.
 */
 
@@ -28,13 +28,13 @@ class Executor
 {
 private:
     std::vector<pipeStruct> pipes;
+    //This is a vector of storing arguments to replace those like "clr"
     std::vector<std::string> customCommands;
     void execute(std::vector<std::string> command);
     void startProcess(int readEnd, int writeEnd);
 
 public:
     Executor();
-
     int handleExec(std::string command);
     void handlePipes(std::vector<std::string> command);
     void initPipes();

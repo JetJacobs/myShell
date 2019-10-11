@@ -33,7 +33,7 @@ void Executor::execute(std::vector<std::string> command)
 
 void Executor::handlePipes(std::vector<std::string> command)
 {
-    //Pipe is made
+    //Declaring variables
     pid_t childPID;
     int numCmds = command.size();
     pipes = *new std::vector<pipeStruct>();
@@ -41,6 +41,7 @@ void Executor::handlePipes(std::vector<std::string> command)
 
     for (int i = 0; i < numCmds; i++)
     {
+        //Check if another pipe is needed and add one
         if (i < numCmds - 1)
         {
             p = *new pipeStruct();
@@ -49,20 +50,17 @@ void Executor::handlePipes(std::vector<std::string> command)
             pipes.push_back(p);
         }
 
-        //Starting from here to the next END comment should probably be method handling this.
         childPID = fork();
         std::vector<std::string> *arguments = parseCommands(command[i]);
 
         if (childPID == 0)
         {
-            if (i == 0)
+            if (i == 0) //If first read in from stdin and write to the first pipe
                 startProcess(STDIN_FILENO, pipes[i].ends[WRITE_END]);
             else if (i < numCmds - 1)
                 startProcess(pipes[i - 1].ends[READ_END], pipes[i].ends[WRITE_END]);
             else
-            {
                 startProcess(pipes[i - 1].ends[READ_END], STDOUT_FILENO);
-            }
 
             if (arguments->back() == "&")
                 arguments->pop_back();
@@ -78,7 +76,6 @@ void Executor::handlePipes(std::vector<std::string> command)
             std::cout << "Error forking";
             exit(1);
         }
-        //END
     }
 }
 
@@ -115,12 +112,12 @@ int Executor::handleExec(std::string command)
 */
 void Executor::startProcess(int readEnd, int writeEnd)
 {
-    if (writeEnd != STDOUT_FILENO) //if not the default write end reassign
+    if (writeEnd != STDOUT_FILENO) //If not the default write end reassign
     {
         dup2(writeEnd, STDOUT_FILENO);
         close(writeEnd);
     }
-    if (readEnd != STDIN_FILENO) // if not the default read end reassign
+    if (readEnd != STDIN_FILENO) //If not the default read end reassign
     {
         dup2(readEnd, STDIN_FILENO);
         close(readEnd);

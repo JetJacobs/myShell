@@ -1,0 +1,4 @@
+ls
+l | more -3
+date;cal;who
+pause
