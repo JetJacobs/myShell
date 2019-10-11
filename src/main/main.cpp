@@ -17,6 +17,7 @@ const int PATH_MAX = 256;
 std::string *input = new std::string();
 std::vector<std::string> *tokens;
 std::string launchDir;
+std::string currentDir;
 
 void execLogic(Executor *executor);
 
@@ -28,14 +29,16 @@ int main(int argc, char **argv)
 
     char buff[PATH_MAX];
     getcwd(buff, PATH_MAX);
-    std::string launchDir = buff;
+    currentDir = buff;
+    std::string temp = "shell=" + currentDir + "/myshell";
+    putenv((char *)temp.c_str());
 
     system("clear");
     if (argc == 1)
     {
         do
         {
-            std::cout << launchDir << BASHSYMBOL;
+            std::cout << currentDir << BASHSYMBOL;
             getline(std::cin, *input);
             execLogic(executor);
         } while (exit == false);
@@ -73,6 +76,12 @@ void execLogic(Executor *executor)
         char *dir = (char *)input->substr(3).c_str(); //Get everything after "cd "
         if (chdir(dir) == -1)
             std::cout << "Error Finding the directory.";
+        else
+        {
+            char buff[PATH_MAX];
+            getcwd(buff, PATH_MAX);
+            currentDir = buff;
+        }
     }
     else
     {
