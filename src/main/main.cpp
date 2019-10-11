@@ -64,30 +64,33 @@ int main(int argc, char **argv)
  */
 void execLogic(Executor *executor)
 {
-    if (*input == "quit")
-        std::exit(0);
-    else if (*input == "pause")
+    tokens = tokenizeInputToCommands(*input); //Parse for semicolons
+    for (int i = 0; i < tokens->size(); i++)
     {
-        std::cout << "Press enter to continue...";
-        getline(std::cin, *input);
-    }
-    else if (input->rfind("cd ", 0) == 0) //If the command starts with "cd "
-    {
-        char *dir = (char *)input->substr(3).c_str(); //Get everything after "cd "
-        if (chdir(dir) == -1)
-            std::cout << "Error Finding the directory.";
+        if (*input == "quit")
+            std::exit(0);
+        else if (*input == "pause")
+        {
+            std::cout << "Press enter to continue...";
+            getline(std::cin, *input);
+        }
+        else if (input->rfind("cd ", 0) == 0) //If the command starts with "cd "
+        {
+            char *dir = (char *)input->substr(3).c_str(); //Get everything after "cd "
+            if (chdir(dir) == -1)
+                std::cout << "Error Finding the directory.";
+            else
+            {
+                char buff[PATH_MAX];
+                getcwd(buff, PATH_MAX);
+                currentDir = buff;
+            }
+        }
         else
         {
-            char buff[PATH_MAX];
-            getcwd(buff, PATH_MAX);
-            currentDir = buff;
-        }
-    }
-    else
-    {
-        tokens = tokenizeInputToCommands(*input); //Parse for semicolons
+            /*tokens = tokenizeInputToCommands(*input); //Parse for semicolons
         for (int i = 0; i < tokens->size(); i++)
-        {
+        {*/
             executor->handleExec((*tokens)[i]);
             std::cout << "\n";
         }

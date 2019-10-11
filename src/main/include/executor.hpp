@@ -31,13 +31,14 @@ private:
     //This is a vector of storing arguments to replace those like "clr"
     std::vector<std::string> customCommands;
     void execute(std::vector<std::string> command);
-    void startProcess(int readEnd, int writeEnd);
+    void initPipes(int readEnd, int writeEnd);
+    void initRedirect(std::string inFile, std::string outFile);
 
 public:
     Executor();
     int handleExec(std::string command);
     void handlePipes(std::vector<std::string> command);
-    void initPipes();
+    void handleRedirect(std::string command);
 };
 
 #endif
