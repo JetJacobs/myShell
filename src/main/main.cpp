@@ -28,21 +28,31 @@ int main(int argc, char **argv)
     {
         do
         {
-            std::cout << BASHSYMBOL;
+            std::cout << "\n"
+                      << BASHSYMBOL;
             getline(std::cin, *input);
 
-            /* TODO move custom commands to the executor
-             * 
-             * 
-            */
+            // TODO move custom commands to the executor
+
             if (*input == "quit")
                 exit = true;
+            else if (*input == "pause")
+            {
+                getline(std::cin, *input);
+            }
+            else if (input->rfind("cd ", 0) == 0)
+            {
+                char *dir = (char *)input->substr(3).c_str();
+                if (chdir(dir) == -1)
+                    std::cout << "Error Finding the directory.";
+            }
             else
             {
                 tokens = tokenizeInputToCommands(*input);
                 for (int i = 0; i < tokens->size(); i++)
                 {
                     executor->handleExec((*tokens)[i]);
+                    std::cout << "\n";
                 }
             }
         } while (exit == false);

@@ -8,13 +8,15 @@ int main()
 {
     std::string testString = "ls -l";
     //std::string testString1 = "cat src/main/executor.cpp | more ";
-    std::string testString1 = "ls -l";
+    std::string testString1 = "cat src/main/main.cpp | more";
     std::string testString2 = "ls -l ; ls";
     std::string multiPipe = "ls | head -4 | head -1";
     Executor executor = Executor();
 
     /* 
-     * This is the start of parsing tests nothing too fancy.
+     *
+     * This region tests the parser library. Not anything too crazy.
+     * 
     */
     std::cout << "\nParse tests\n";
     std::cout << divider << '\n';
@@ -35,7 +37,7 @@ int main()
     parserOutput = *parseCommands(testString1);
     std::cout << "\tExpect: 4\tActual: " << parserOutput.size() << "\n";
 
-    std::cout << "Parsing string by semicolon pipes or semicolon\n";
+    std::cout << "Parsing string by semicolon no pipes or semicolon\n";
     parserOutput = *tokenizeInputToCommands(testString);
     std::cout << "\tExpect: 1\tActual: " << parserOutput.size() << "\n";
 
@@ -47,6 +49,11 @@ int main()
     parserOutput = *tokenizeInputToCommands(testString2);
     std::cout << "\tExpect: 2\tActual: " << parserOutput.size() << "\n";
 
+    /*
+     *
+     * Tests the handle pipes functionality
+     * 
+    */
     parserOutput = *tokenizePipeCommands(testString1);
     std::cout << parserOutput[0] << "\n";
     std::cout << divider << "\n";
@@ -56,6 +63,12 @@ int main()
     std::cout << parserOutput[0] << "|" << parserOutput[1] << "|" << parserOutput[2] << "\n";
     std::cout << divider << "\n";
     executor.handlePipes(parserOutput);
+
+    /*
+     *
+     * Tests the handle pipes functionality
+     * 
+    */
 
     return 0;
 }
