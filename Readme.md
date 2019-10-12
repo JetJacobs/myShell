@@ -1,5 +1,6 @@
 # MyShell
 
+Jet Jacobs Project 1
 Assignment for CS-352
 
 ## Running myShell
@@ -10,9 +11,9 @@ Assignment for CS-352
     Additionally you may run with
         1) make
         2) ./myshell.o
-    Running with input and output files
+    Running with a batchfile
         1) make
-        2) ./myshell.o "inputname" "outputname
+        2) ./myshell.o "inputname"
         Substituting the values in quotes with the expected values
 
 ## Testing

@@ -1,3 +1,9 @@
+/* Author Jet Jacobs
+ * Date:  10/5/19
+ * This is just a very basic testing template for the pipe testing I fully expect to have this more fleshed out
+ * by the due date.
+ */
+
 #include <iostream>
 
 #include "../main/include/cmdParser.hpp"
