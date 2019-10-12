@@ -148,9 +148,10 @@ void Executor::handlePipes(std::vector<std::string> command)
         {
             if (i == 0) //If first read in from stdin and write to the first pipe
             {
-                close(pipes[0].ends[READ_END]);
-                initPipes(STDIN_FILENO, pipes[0].ends[WRITE_END]);
-                close(pipes[0].ends[WRITE_END]);
+                dup2(pipes[i].ends[WRITE_END], STDOUT_FILENO);
+                close(pipes[i].ends[READ_END]);
+                close(pipes[i].ends[WRITE_END]);
+                //initPipes(STDIN_FILENO, pipes[0].ends[WRITE_END]);
             }
             else if (i != numCmds - 1) //If a middle item read from previous pipe
             {                          // and write to write end of current pipe.
@@ -158,9 +159,10 @@ void Executor::handlePipes(std::vector<std::string> command)
             }
             else //If at the end read from previous pipes
             {    //READ_END, and write to STDOUT_FILENO
-                close(pipes[i - 1].ends[WRITE_END]);
-                initPipes(pipes[i - 1].ends[READ_END], STDOUT_FILENO);
+                dup2(pipes[i - 1].ends[READ_END], STDIN_FILENO);
                 close(pipes[i - 1].ends[READ_END]);
+                close(pipes[i - 1].ends[WRITE_END]);
+                //initPipes(pipes[i - 1].ends[READ_END], STDOUT_FILENO);
             }
 
             if (arguments->back() == "&") //Small handler for background procs
@@ -168,16 +170,18 @@ void Executor::handlePipes(std::vector<std::string> command)
             execute(*arguments);
             std::cout << "Exec failed";
         }
-        else if (childPID > 0)
-        {
-            waitpid(childPID, NULL, 0);
-        }
-        else
+        else if (childPID < 0)
         {
             std::cout << "Error forking";
             exit(1);
         }
     }
+    for (int i = 0; i < pipes.size(); i++)
+    {
+        close(pipes[i].ends[READ_END]);
+        close(pipes[i].ends[WRITE_END]);
+    }
+    waitpid(childPID, NULL, 0);
 }
 
 /*
