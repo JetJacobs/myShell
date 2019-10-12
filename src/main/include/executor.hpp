@@ -53,18 +53,6 @@ private:
      */
     void initPipes(int readEnd, int writeEnd);
 
-    /*
-     * I haven't yet fully implemented this part of the project.
-     * The idea is that it works similarly to how initPipes works, but
-     * with files passed via commandline.
-     * 
-     * Parameters:
-     *      inFile: is the param to replace STDIN_FILENO
-     *      outFile: is the param to replace STDOUT_FILENO
-     * Returns: Nothing
-     */
-    void initRedirect(std::string inFile, std::string outFile);
-
 public:
     /*
      * Constructor for the executor, doesn't require any parameters
@@ -93,16 +81,6 @@ public:
      * Returns: 0 on sucsessfull run when returning to myshell main
      */
     void handlePipes(std::vector<std::string> command);
-
-    /*
-     * Disclamer this is not yet implemented. This is to handle the redirect logic. It will ideally be added in the
-     * handleExec() method. 
-     * 
-     * Parameters:
-     *      Command: This is a string already parsed for ; seperators
-     * Returns: Nothing
-     */
-    void handleRedirect(std::string command);
 };
 
 #endif

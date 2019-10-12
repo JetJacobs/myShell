@@ -39,7 +39,33 @@ void Executor::execute(std::vector<std::string> command)
     {
         //If there is a given command load another instead. Effectively an alias.
         //The rest is formatting to be passed to execvp.
-        if (command[i] == "clr")
+        if (command[i] == "<<")
+        {
+            if (i + 1 < command.size())
+            {
+                freopen((char *)command[i + 1].c_str(), "r", stdin);
+                i++;
+            }
+        }
+        else if (command[i] == ">>")
+        { //if there is another parameter consume it as file input
+            if (i + 1 < command.size())
+            {
+                freopen((char *)command[i + 1].c_str(), "a", stdout); //redirect out
+                freopen((char *)command[i + 1].c_str(), "a", stderr);
+                i++;
+            }
+        }
+        else if (command[i] == ">")
+        { //if there is another parameter consume it as file input
+            if (i + 1 < command.size())
+            {
+                freopen((char *)command[i + 1].c_str(), "w", stdout); //redirect out
+                freopen((char *)command[i + 1].c_str(), "w", stderr);
+                i++;
+            }
+        }
+        else if (command[i] == "clr")
             argv.push_back((char *)customCommands[0].c_str());
         else if (command[i] == "environ")
             argv.push_back((char *)customCommands[1].c_str());
@@ -151,64 +177,6 @@ void Executor::handlePipes(std::vector<std::string> command)
             std::cout << "Error forking";
             exit(1);
         }
-    }
-}
-
-/*
- * Disclamer this is not yet implemented. This is to handle the redirect logic. It will ideally be added in the
- * handleExec() method. 
- * 
- * Parameters:
- *      Command: This is a string already parsed for ; seperators
- * Returns: Nothing
- */
-void Executor::handleRedirect(std::string command)
-{
-    std::vector<char *> argv = std::vector<char *>();
-    std::vector<std::string> arguments = *parseCommands(command);
-
-    for (int i = 0; i < arguments.size(); i++)
-    {
-        if (arguments[i] == ">>")
-        {
-        }
-        else if (arguments[i] == ">")
-        {
-
-        } //else if(input){}
-        else if (arguments[i] == "clr")
-            argv.push_back((char *)customCommands[0].c_str());
-        else if (arguments[i] == "environ")
-            argv.push_back((char *)customCommands[1].c_str());
-        else if (arguments[i] == "dir")
-            argv.push_back((char *)customCommands[2].c_str());
-        else if (arguments[i] == "help")
-        {
-        }
-        else
-            argv.push_back((char *)arguments[i].c_str());
-    }
-}
-
-/*
- * I haven't yet fully implemented this part of the project.
- * The idea is that it works similarly to how initPipes works, but
- * with files passed via commandline.
- * 
- * Parameters:
- *      inFile: is the param to replace STDIN_FILENO
- *      outFile: is the param to replace STDOUT_FILENO
- * Returns: Nothing
- */
-void Executor::initRedirect(std::string inFile, std::string outFile)
-{
-    if (!outFile.empty()) //If not the default write end reassign
-    {
-        freopen(outFile.c_str(), "w", stdout);
-    }
-    if (!inFile.empty()) //If not the default read end reassign
-    {
-        freopen(inFile.c_str(), "r", stdin);
     }
 }
 
