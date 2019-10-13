@@ -10,10 +10,10 @@ Assignment for CS-352
         2) make run
     Additionally you may run with
         1) make
-        2) ./myshell.o
+        2) ./myshell
     Running with a batchfile
         1) make
-        2) ./myshell.o "inputname"
+        2) ./myshell "inputname"
         Substituting the values in quotes with the expected values
 
 ## Testing
@@ -29,18 +29,21 @@ Assignment for CS-352
 
 ## Known bugs
 
-    1. When piping into the more command:
-        If the data piped into the more command is smaller than the terminal, then it hangs.
-        Due to it working otherwise, I believe this is do to a abnormal termination.
-        in the more command for this scenario. I was unsure how to fix.
-
-    2. Running help:
-        It appears this is not a supported command via execvp. I was unable to confirm how this works.
-        I intend to instead list the read me page.
+    1. cd isn't able to be used with pipe or redirection of inputs
 
     I do know there are more, but these are the ones that stuck out, and may help grading go smoother.
 
-## Additional Notes
+## Retrospective
 
-    I had some trouble discerning what to print as part of my shell.
-    I didn't know if the line was to change as we navigate to other directories, or if it was to be the location it was executed from.
+    So, I think this was a reall fun project. I do tend to prefer to work in higher level languages,
+    so that caused some difficulty, but I did learn a lot about how the processes are actually handled.
+    At the begining I had a fundemental lack of understanding about both the theory, and implementation
+    of pipes. I think this has cleared most (I'm by no means an expert) of the issues I was having.
+
+    Additionally, It isn't as modular as I would have hoped. That being said, it works for the most part,
+    but it will need some serious TLC if I want it to be up to par.
+
+    Sugestions
+        - More conscise methods
+        - Slightly less comments
+        - Find a better control flow rather than 100 if statments

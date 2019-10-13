@@ -26,7 +26,7 @@ const int PATH_MAX = 256;
 
 std::string *input = new std::string();
 std::vector<std::string> *tokens;
-std::string launchDir;
+std::string PWD;
 std::string currentDir;
 
 void execLogic(Executor *executor);
@@ -38,17 +38,17 @@ int main(int argc, char **argv)
     Executor *executor = new Executor();
 
     char buff[PATH_MAX];
-    getcwd(buff, PATH_MAX);
+    getcwd(buff, PATH_MAX); //get the cwd note this doesn't track symbolic links
     currentDir = buff;
     std::string temp = "shell=" + currentDir + "/myshell";
-    putenv((char *)temp.c_str());
+    putenv((char *)temp.c_str()); //Set shell in env
 
     system("clear");
-    if (argc == 1)
+    if (argc == 1) //If no file was provided
     {
         do
         {
-            std::cout << currentDir << BASHSYMBOL;
+            std::cout << getcwd(buff, PATH_MAX) << BASHSYMBOL;
             getline(std::cin, *input);
             execLogic(executor);
         } while (exit == false);
@@ -80,33 +80,10 @@ int main(int argc, char **argv)
  */
 void execLogic(Executor *executor)
 {
-    if (*input == "quit")
-        std::exit(0);
-    else if (*input == "pause")
+    tokens = tokenizeInputToCommands(*input); //Parse for semicolons
+    for (int i = 0; i < tokens->size(); i++)
     {
-        std::cout << "Press enter to continue...";
-        getline(std::cin, *input);
-    }
-    else if (input->rfind("cd ", 0) == 0) //If the command starts with "cd "
-    {
-        char *dir = (char *)input->substr(3).c_str(); //Get everything after "cd "
-        if (chdir(dir) == -1)
-            std::cout << "Error Finding the directory.";
-        else
-        {
-            //Get path and store it
-            char buff[PATH_MAX];
-            getcwd(buff, PATH_MAX);
-            currentDir = buff;
-        }
-    }
-    else
-    {
-        tokens = tokenizeInputToCommands(*input); //Parse for semicolons
-        for (int i = 0; i < tokens->size(); i++)
-        {
-            executor->handleExec((*tokens)[i]);
-            std::cout << "\n";
-        }
+        executor->handleExec((*tokens)[i]);
+        std::cout << "\n";
     }
 }

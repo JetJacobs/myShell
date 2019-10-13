@@ -1,5 +1,5 @@
 default: src/main/main.cpp src/main/executor.cpp src/main/include/executor.hpp src/main/cmdParser.cpp src/main/include/cmdParser.hpp
-	g++ -o myshell.o src/main/main.cpp src/main/executor.cpp src/main/include/executor.hpp src/main/cmdParser.cpp src/main/include/cmdParser.hpp
+	g++ -o myshell src/main/main.cpp src/main/executor.cpp src/main/include/executor.hpp src/main/cmdParser.cpp src/main/include/cmdParser.hpp
 
 test: src/test/execTest.cpp src/main/executor.cpp src/main/include/executor.hpp src/main/cmdParser.cpp src/main/include/cmdParser.hpp
 	make pipeTest
@@ -14,6 +14,7 @@ pipeTest: src/test/pipeTest.cpp src/main/cmdParser.cpp src/main/include/cmdParse
 	./pipeTest.o
 
 run:
-	./myshell.o
+	./myshell
 clean:
+	rm -vf myshell
 	rm -rvf *.o

@@ -9,6 +9,7 @@
 
 #define READ_END 0
 #define WRITE_END 1
+const int PATH_MAX = 256;
 
 /*
  * Constructor for the executor, doesn't require any parameters
@@ -39,11 +40,11 @@ void Executor::execute(std::vector<std::string> command)
     {
         //If there is a given command load another instead. Effectively an alias.
         //The rest is formatting to be passed to execvp.
-        if (command[i] == "<<")
+        if (command[i] == "<")
         {
             if (i + 1 < command.size())
             {
-                freopen((char *)command[i + 1].c_str(), "r", stdin);
+                freopen((char *)command[i + 1].c_str(), "r", stdin); //redirect in
                 i++;
             }
         }
@@ -65,12 +66,19 @@ void Executor::execute(std::vector<std::string> command)
                 i++;
             }
         }
-        else if (command[i] == "clr")
+        else if (command[i] == "clr" && i == 0) //if the command is clr so we can ls clr if needed
             argv.push_back((char *)customCommands[0].c_str());
-        else if (command[i] == "environ")
+        else if (command[i] == "environ" && i == 0)
             argv.push_back((char *)customCommands[1].c_str());
-        else if (command[i] == "dir")
+        else if (command[i] == "dir" && i == 0)
+        {
+            if (command.size() < 2)
+            {
+                std::cout << "Invalid format: dir requires at least one argument";
+                exit(0);
+            }
             argv.push_back((char *)customCommands[2].c_str());
+        }
         else
             argv.push_back((char *)command[i].c_str());
     }
@@ -92,32 +100,98 @@ void Executor::execute(std::vector<std::string> command)
 int Executor::handleExec(std::string command)
 {
     std::vector<std::string> *pipeCommands = tokenizePipeCommands(command);
+    std::vector<std::string> *arguments = parseCommands(command);
     if (pipeCommands->size() != 1) //Check if it is a piped command
-        handlePipes(*pipeCommands);
-    else //Run as unpiped command
     {
-        pid_t childPID = fork();
-        std::vector<std::string> *arguments = parseCommands(command);
-        if (childPID == 0)
+        if ((*arguments)[arguments->size() - 1] == "&") //If the last arg is &
         {
-            if (arguments->back() == "&") //Handler for background running
-                arguments->pop_back();
-            execute(*arguments);
-        }
-        else if (childPID > 0)
-        {
-            if (arguments->back() != "&")
-                waitpid(childPID, NULL, 0);
-            return 0;
+            pid_t childPID = fork(); //Create a fork, and don't wait for child in parent
+            if (childPID == 0)
+            {
+                handlePipes(*pipeCommands);
+                exit(0); //child exits once process was done.
+            }
+            else if (childPID < 0)
+                std::cout << "Issue forking";
         }
         else
-            std::cout << "Failed to fork.";
+            handlePipes(*pipeCommands); //Defaults to waiting for the process
+    }
+    else //Run as unpiped command
+    {
+        if ((*arguments)[0] == "quit")
+            exit(0);
+        else if ((*arguments)[0] == "pause")
+        {
+            std::string temp = *new std::string();
+            std::cout << "Press enter to continue...";
+            getline(std::cin, temp); // waits for input
+        }
+        else if ((*arguments)[0] == "help")
+        {
+            std::string newCmd = "man --help | more" + command.substr(4); //the whole command
+            std::vector<std::string> *newPipeCommands = tokenizePipeCommands(newCmd);
+            handlePipes(*newPipeCommands); //Process new piped command
+        }
+        else if ((*arguments)[0] == "cd")
+        {
+            char buff[PATH_MAX];
+            std::string directory = "";
+            if (arguments->size() > 1)
+            {
+                if ((*arguments)[1] == ">>" || (*arguments)[1] == ">") //handle redirect
+                {
+                    // This is to list current dir, but support >> and > redirects
+                    pid_t childPID = fork(); //Create a fork, and don't wait for child in parent
+                    if (childPID == 0)
+                    {
+                        std::string temp = "pwd";
+                        (*arguments)[0] = temp;
+                        execute(*arguments);
+                        exit(0); //child exits once process was done.
+                    }
+                    else if (childPID < 0)
+                        std::cout << "Issue forking";
+                    else
+                        waitpid(childPID, NULL, 0);
+                }
+                else if ((*arguments)[1] != ";" || (*arguments)[1] != "<")
+                {
+                    directory = (*arguments)[1]; //Get everything after "cd "
+                    if (chdir(directory.c_str()) == -1)
+                        std::cout << "Error Finding the directory.\n";
+                }
+            }
+            else if (directory == "") // if no arguments were passed default to writing out dir
+            {
+                getcwd(buff, 256);
+                std::cout << buff;
+            }
+        }
+        else
+        {
+            pid_t childPID = fork();
+            if (childPID == 0)
+            {
+                if (arguments->back() == "&") //Handler for background running
+                    arguments->pop_back();
+                execute(*arguments);
+            }
+            else if (childPID > 0)
+            {
+                if (arguments->back() != "&")
+                    waitpid(childPID, NULL, 0);
+                return 0;
+            }
+            else
+                std::cout << "Failed to fork.";
+        }
     }
 }
 
 /*
  * This handles branching and piping to execute as closely as I could to
- * the behaviour to my linux shell.
+ * the behaviour to my linux shell. Defaults waiting for process.
  * 
  * Parameters:
  *      Command: This is a string already parsed for ; and | seperators
@@ -129,6 +203,7 @@ void Executor::handlePipes(std::vector<std::string> command)
     pid_t childPID;
     int numCmds = command.size();
     pipes = *new std::vector<pipeStruct>();
+    std::vector<std::string> *arguments;
 
     for (int i = 0; i < numCmds; i++)
     {
@@ -142,7 +217,7 @@ void Executor::handlePipes(std::vector<std::string> command)
         }
 
         childPID = fork();
-        std::vector<std::string> *arguments = parseCommands(command[i]);
+        arguments = parseCommands(command[i]);
 
         if (childPID == 0)
         {
@@ -181,6 +256,7 @@ void Executor::handlePipes(std::vector<std::string> command)
         close(pipes[i].ends[READ_END]);
         close(pipes[i].ends[WRITE_END]);
     }
+    pipes.empty();
     waitpid(childPID, NULL, 0);
 }
 
