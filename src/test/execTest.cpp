@@ -26,13 +26,13 @@ int main()
     */
     std::vector<std::string> *pipeTokens = tokenizePipeCommands(testString1);
     std::vector<std::string> *arguments = parseCommands(testString1);
-    std::cout << pipeTokens[0] << "|" << pipeTokens[1] << "\n";
+    std::cout << &pipeTokens[0] << "|" << &pipeTokens[1] << "\n";
     std::cout << divider << "\n";
     executor.executePipes(pipeTokens, arguments);
 
     pipeTokens = tokenizePipeCommands(multiPipe);
     arguments = parseCommands(multiPipe);
-    std::cout << pipeTokens[0] << "|" << pipeTokens[1] << "|" << pipeTokens[2] << "\n";
+    std::cout << &pipeTokens[0] << "|" << &pipeTokens[1] << "|" << &pipeTokens[2] << "\n";
     std::cout << divider << "\n";
     executor.executePipes(pipeTokens, arguments);
 
