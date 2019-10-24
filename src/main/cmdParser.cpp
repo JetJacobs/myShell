@@ -7,6 +7,8 @@
 #include "include/cmdParser.hpp"
 #include <iostream>
 
+std::vector<std::string> customCommands = {"clear", "printenv", "ls"};
+
 /*
  * This is parses the input string on whitespace so that it may
  * be used later during processing. 
@@ -72,4 +74,68 @@ std::vector<std::string> *tokenizePipeCommands(std::string pipeCommand)
         temp = strtok(NULL, "|");
     }
     return commands;
+}
+
+/*
+ * This formats a command vector into a form that may be passed
+ * to a execvp() call.
+ * 
+ * Parameters: 
+ *      command: vector<string> representing arguments to be passed
+ * Returns: A formatted vector<char *> that is the passed value
+ *          formatted so that it may be passed to an execvp().
+ */
+std::vector<char *> formatCommandArgs(std::vector<std::string> command)
+{
+    std::vector<char *> argv = std::vector<char *>();
+
+    //This creates a argument vector that can be accepted by execvp
+    for (int i = 0; i < command.size(); i++)
+    {
+        //If there is a given command load another instead. Effectively an alias.
+        //The rest is formatting to be passed to execvp.
+        if (command[i] == "<")
+        {
+            if (i + 1 < command.size())
+            {
+                freopen((char *)command[i + 1].c_str(), "r", stdin); //redirect in
+                i++;
+            }
+        }
+        else if (command[i] == ">>")
+        { //if there is another parameter consume it as file input
+            if (i + 1 < command.size())
+            {
+                freopen((char *)command[i + 1].c_str(), "a", stdout); //redirect out
+                freopen((char *)command[i + 1].c_str(), "a", stderr);
+                i++;
+            }
+        }
+        else if (command[i] == ">")
+        { //if there is another parameter consume it as file input
+            if (i + 1 < command.size())
+            {
+                freopen((char *)command[i + 1].c_str(), "w", stdout); //redirect out
+                freopen((char *)command[i + 1].c_str(), "w", stderr);
+                i++;
+            }
+        }
+        else if (command[i] == "clr" && i == 0) //if the command is clr so we can ls clr if needed
+            argv.push_back((char *)customCommands[0].c_str());
+        else if (command[i] == "environ" && i == 0)
+            argv.push_back((char *)customCommands[1].c_str());
+        else if (command[i] == "dir" && i == 0)
+        {
+            if (command.size() < 2)
+            {
+                std::cout << "Invalid format: dir requires at least one argument";
+                exit(0);
+            }
+            argv.push_back((char *)customCommands[2].c_str());
+        }
+        else
+            argv.push_back((char *)command[i].c_str());
+    }
+    argv.push_back(NULL);
+    return argv;
 }

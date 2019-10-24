@@ -28,7 +28,6 @@ class Executor
 {
 private:
     std::vector<pipeStruct> pipes;
-    std::vector<std::string> customCommands;
 
     /*
      * This is the method that handles execution by taking the vector
@@ -53,6 +52,18 @@ private:
      */
     void initPipes(int readEnd, int writeEnd);
 
+    /*
+     * This handles branching and piping to execute as closely as I could to
+     * the behaviour to my linux shell.
+     * 
+     * Parameters:
+     *      Command: This is a string already parsed for ; and | seperators
+     * Returns: 0 on sucsessfull run when returning to myshell main
+     */
+    void handlePipes(std::vector<std::string> command);
+
+    void executeChangeDir(std::vector<std::string> *arguments);
+
 public:
     /*
      * Constructor for the executor, doesn't require any parameters
@@ -72,15 +83,7 @@ public:
      */
     int handleExec(std::string command);
 
-    /*
-     * This handles branching and piping to execute as closely as I could to
-     * the behaviour to my linux shell.
-     * 
-     * Parameters:
-     *      Command: This is a string already parsed for ; and | seperators
-     * Returns: 0 on sucsessfull run when returning to myshell main
-     */
-    void handlePipes(std::vector<std::string> command);
+    void executePipes(std::vector<std::string> *pipeCommands, std::vector<std::string> *arguments);
 };
 
 #endif

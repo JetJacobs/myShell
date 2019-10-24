@@ -19,13 +19,12 @@ const int PATH_MAX = 256;
  */
 Executor::Executor()
 {
-    //These are used as fixed replacements in the execute function.
-    customCommands = {"clear", "printenv", "ls"};
 }
 
 /*
  * This is the method that handles execution by taking the vector
  * and formatting it to a useable format for an exec function.
+ * then execvp() it.
  * 
  * Parameters: 
  *      command: is a vector of strings in which each string
@@ -34,55 +33,7 @@ Executor::Executor()
  */
 void Executor::execute(std::vector<std::string> command)
 {
-    std::vector<char *> argv = std::vector<char *>();
-    //This creates a argument vector that can be accepted by execvp
-    for (int i = 0; i < command.size(); i++)
-    {
-        //If there is a given command load another instead. Effectively an alias.
-        //The rest is formatting to be passed to execvp.
-        if (command[i] == "<")
-        {
-            if (i + 1 < command.size())
-            {
-                freopen((char *)command[i + 1].c_str(), "r", stdin); //redirect in
-                i++;
-            }
-        }
-        else if (command[i] == ">>")
-        { //if there is another parameter consume it as file input
-            if (i + 1 < command.size())
-            {
-                freopen((char *)command[i + 1].c_str(), "a", stdout); //redirect out
-                freopen((char *)command[i + 1].c_str(), "a", stderr);
-                i++;
-            }
-        }
-        else if (command[i] == ">")
-        { //if there is another parameter consume it as file input
-            if (i + 1 < command.size())
-            {
-                freopen((char *)command[i + 1].c_str(), "w", stdout); //redirect out
-                freopen((char *)command[i + 1].c_str(), "w", stderr);
-                i++;
-            }
-        }
-        else if (command[i] == "clr" && i == 0) //if the command is clr so we can ls clr if needed
-            argv.push_back((char *)customCommands[0].c_str());
-        else if (command[i] == "environ" && i == 0)
-            argv.push_back((char *)customCommands[1].c_str());
-        else if (command[i] == "dir" && i == 0)
-        {
-            if (command.size() < 2)
-            {
-                std::cout << "Invalid format: dir requires at least one argument";
-                exit(0);
-            }
-            argv.push_back((char *)customCommands[2].c_str());
-        }
-        else
-            argv.push_back((char *)command[i].c_str());
-    }
-    argv.push_back(NULL);
+    std::vector<char *> argv = formatCommandArgs(command);
 
     execvp(argv[0], &argv[0]);
     std::cout << "This appears to be an unknown command";
@@ -103,19 +54,7 @@ int Executor::handleExec(std::string command)
     std::vector<std::string> *arguments = parseCommands(command);
     if (pipeCommands->size() != 1) //Check if it is a piped command
     {
-        if ((*arguments)[arguments->size() - 1] == "&") //If the last arg is &
-        {
-            pid_t childPID = fork(); //Create a fork, and don't wait for child in parent
-            if (childPID == 0)
-            {
-                handlePipes(*pipeCommands);
-                exit(0); //child exits once process was done.
-            }
-            else if (childPID < 0)
-                std::cout << "Issue forking";
-        }
-        else
-            handlePipes(*pipeCommands); //Defaults to waiting for the process
+        executePipes(pipeCommands, arguments);
     }
     else //Run as unpiped command
     {
@@ -135,38 +74,7 @@ int Executor::handleExec(std::string command)
         }
         else if ((*arguments)[0] == "cd")
         {
-            char buff[PATH_MAX];
-            std::string directory = "";
-            if (arguments->size() > 1)
-            {
-                if ((*arguments)[1] == ">>" || (*arguments)[1] == ">") //handle redirect
-                {
-                    // This is to list current dir, but support >> and > redirects
-                    pid_t childPID = fork(); //Create a fork, and don't wait for child in parent
-                    if (childPID == 0)
-                    {
-                        std::string temp = "pwd";
-                        (*arguments)[0] = temp;
-                        execute(*arguments);
-                        exit(0); //child exits once process was done.
-                    }
-                    else if (childPID < 0)
-                        std::cout << "Issue forking";
-                    else
-                        waitpid(childPID, NULL, 0);
-                }
-                else if ((*arguments)[1] != ";" || (*arguments)[1] != "<")
-                {
-                    directory = (*arguments)[1]; //Get everything after "cd "
-                    if (chdir(directory.c_str()) == -1)
-                        std::cout << "Error Finding the directory.\n";
-                }
-            }
-            else if (directory == "") // if no arguments were passed default to writing out dir
-            {
-                getcwd(buff, 256);
-                std::cout << buff;
-            }
+            executeChangeDir(arguments);
         }
         else
         {
@@ -187,6 +95,23 @@ int Executor::handleExec(std::string command)
                 std::cout << "Failed to fork.";
         }
     }
+}
+
+void Executor::executePipes(std::vector<std::string> *pipeCommands, std::vector<std::string> *arguments)
+{
+    if ((*arguments)[arguments->size() - 1] == "&") //If the last arg is &
+    {
+        pid_t childPID = fork(); //Create a fork, and don't wait for child in parent
+        if (childPID == 0)
+        {
+            handlePipes(*pipeCommands);
+            exit(0); //child exits once process was done.
+        }
+        else if (childPID < 0)
+            std::cout << "Issue forking";
+    }
+    else
+        handlePipes(*pipeCommands); //Defaults to waiting for the process
 }
 
 /*
@@ -223,10 +148,8 @@ void Executor::handlePipes(std::vector<std::string> command)
         {
             if (i == 0) //If first read in from stdin and write to the first pipe
             {
-                dup2(pipes[i].ends[WRITE_END], STDOUT_FILENO);
                 close(pipes[i].ends[READ_END]);
-                close(pipes[i].ends[WRITE_END]);
-                //initPipes(STDIN_FILENO, pipes[0].ends[WRITE_END]);
+                initPipes(STDIN_FILENO, pipes[0].ends[WRITE_END]);
             }
             else if (i != numCmds - 1) //If a middle item read from previous pipe
             {                          // and write to write end of current pipe.
@@ -234,16 +157,13 @@ void Executor::handlePipes(std::vector<std::string> command)
             }
             else //If at the end read from previous pipes
             {    //READ_END, and write to STDOUT_FILENO
-                dup2(pipes[i - 1].ends[READ_END], STDIN_FILENO);
-                close(pipes[i - 1].ends[READ_END]);
                 close(pipes[i - 1].ends[WRITE_END]);
-                //initPipes(pipes[i - 1].ends[READ_END], STDOUT_FILENO);
+                initPipes(pipes[i - 1].ends[READ_END], STDIN_FILENO);
             }
 
             if (arguments->back() == "&") //Small handler for background procs
                 arguments->pop_back();
             execute(*arguments);
-            std::cout << "Exec failed";
         }
         else if (childPID < 0)
         {
@@ -281,5 +201,41 @@ void Executor::initPipes(int readEnd, int writeEnd)
     {
         dup2(readEnd, STDIN_FILENO);
         close(readEnd);
+    }
+}
+
+void Executor::executeChangeDir(std::vector<std::string> *arguments)
+{
+    char buff[PATH_MAX];
+    std::string directory = "";
+    if (arguments->size() > 1)
+    {
+        if ((*arguments)[1] == ">>" || (*arguments)[1] == ">") //handle redirect
+        {
+            // This is to list current dir, but support >> and > redirects
+            pid_t childPID = fork(); //Create a fork, and don't wait for child in parent
+            if (childPID == 0)
+            {
+                std::string temp = "pwd";
+                (*arguments)[0] = temp;
+                execute(*arguments);
+                exit(0); //child exits once process was done.
+            }
+            else if (childPID < 0)
+                std::cout << "Issue forking";
+            else
+                waitpid(childPID, NULL, 0);
+        }
+        else if ((*arguments)[1] != ";" || (*arguments)[1] != "<")
+        {
+            directory = (*arguments)[1]; //Get everything after "cd "
+            if (chdir(directory.c_str()) == -1)
+                std::cout << "Error Finding the directory.\n";
+        }
+    }
+    else if (directory == "") // if no arguments were passed default to writing out dir
+    {
+        getcwd(buff, 256);
+        std::cout << buff;
     }
 }

@@ -48,4 +48,6 @@ std::vector<std::string> *tokenizeInputToCommands(std::string input);
  */
 std::vector<std::string> *tokenizePipeCommands(std::string pipeCommand);
 
+std::vector<char *> formatCommandArgs(std::vector<std::string> command);
+
 #endif

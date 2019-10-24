@@ -24,15 +24,17 @@ int main()
      * Tests the handle pipes functionality
      * 
     */
-    std::vector<std::string> parserOutput = *tokenizePipeCommands(testString1);
-    std::cout << parserOutput[0] << "|" << parserOutput[1] << "\n";
+    std::vector<std::string> *pipeTokens = tokenizePipeCommands(testString1);
+    std::vector<std::string> *arguments = parseCommands(testString1);
+    std::cout << pipeTokens[0] << "|" << pipeTokens[1] << "\n";
     std::cout << divider << "\n";
-    executor.handlePipes(parserOutput);
+    executor.executePipes(pipeTokens, arguments);
 
-    parserOutput = *tokenizePipeCommands(multiPipe);
-    std::cout << parserOutput[0] << "|" << parserOutput[1] << "|" << parserOutput[2] << "\n";
+    pipeTokens = tokenizePipeCommands(multiPipe);
+    arguments = parseCommands(multiPipe);
+    std::cout << pipeTokens[0] << "|" << pipeTokens[1] << "|" << pipeTokens[2] << "\n";
     std::cout << divider << "\n";
-    executor.handlePipes(parserOutput);
+    executor.executePipes(pipeTokens, arguments);
 
     std::cout << pipeRedirect << "\n"
               << divider << "\n";
